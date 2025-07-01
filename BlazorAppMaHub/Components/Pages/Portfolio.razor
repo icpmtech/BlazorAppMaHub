@@ -1,0 +1,101 @@
+﻿@page "/portfolio/stocks"
+@attribute [StreamRendering]
+
+<PageTitle>Portfolio Stocks</PageTitle>
+
+<h1>Portfolio Stocks</h1>
+
+<p>Search for stock symbols or company names:</p>
+<div class="input-group mb-3">
+    <input class="form-control"
+           placeholder="e.g. MSFT or Apple"
+           @bind="searchQuery"
+           @onkeypress="@(e => { if (e.Key == "Enter") _ = SearchSymbols(); })" />
+    <button class="btn btn-primary" @onclick="SearchSymbols">Search</button>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (symbols == null)
+{
+    <p><em>Enter a query and click Search to find stocks.</em></p>
+}
+else if (!symbols.Any())
+{
+    <p><em>No matches found for "@searchQuery".</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Price (USD)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in symbols)
+            {
+                <tr>
+                    <td>@s.Symbol</td>
+                    <td>@s.Name</td>
+                    <td>@s.Price.ToString("C2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string searchQuery = string.Empty;
+    private StockSymbol[]? symbols;
+    private bool isLoading;
+
+    protected override void OnInitialized()
+    {
+        // Optionally initialize with a default watchlist
+    }
+
+    private async Task SearchSymbols()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            symbols = Array.Empty<StockSymbol>();
+            return;
+        }
+
+        isLoading = true;
+        // Simulate network latency or streaming
+        await Task.Delay(500);
+
+        // TODO: Replace this stub with a real API call to fetch symbols
+        symbols = await FetchStockSymbolsAsync(searchQuery);
+
+        isLoading = false;
+    }
+
+    private Task<StockSymbol[]> FetchStockSymbolsAsync(string query)
+    {
+        // Stubbed data for demonstration. Replace with real data source.
+        var all = new[]
+        {
+            new StockSymbol("MSFT", "Microsoft Corporation", 289.67m),
+            new StockSymbol("AAPL", "Apple Inc.", 187.34m),
+            new StockSymbol("GOOGL", "Alphabet Inc.", 146.23m),
+            new StockSymbol("AMZN", "Amazon.com, Inc.", 134.50m),
+            new StockSymbol("TSLA", "Tesla, Inc.", 699.10m)
+        };
+
+        return Task.FromResult(
+            all
+                .Where(s => s.Symbol.Contains(query, StringComparison.OrdinalIgnoreCase)
+                         || s.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .ToArray()
+        );
+    }
+
+    private record StockSymbol(string Symbol, string Name, decimal Price);
+}

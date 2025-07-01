@@ -1,0 +1,92 @@
+﻿@page "/portfolio/dividends"
+@attribute [StreamRendering]
+
+<PageTitle>Portfolio Dividends</PageTitle>
+
+<h1>Portfolio Dividends</h1>
+
+<p>Search for stock symbols or company names to view recent dividends:</p>
+<div class="input-group mb-3">
+    <input class="form-control"
+           placeholder="e.g. MSFT or Apple"
+           @bind="searchQuery"
+           @onkeypress="@(e => { if (e.Key == "Enter") _ = SearchDividends(); })" />
+    <button class="btn btn-primary" @onclick="SearchDividends">Search</button>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading...</em></p>
+}
+else if (dividends == null)
+{
+    <p><em>Enter a query and click Search to find dividends.</em></p>
+}
+else if (!dividends.Any())
+{
+    <p><em>No dividends found for "@searchQuery".</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Company</th>
+                <th>Last Dividend</th>
+                <th>Yield (%)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in dividends)
+            {
+                <tr>
+                    <td>@d.Symbol</td>
+                    <td>@d.Name</td>
+                    <td>@d.LastDividend.ToString("yyyy-MM-dd")</td>
+                    <td>@d.Yield.ToString("F2")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string searchQuery = string.Empty;
+    private DividendRecord[]? dividends;
+    private bool isLoading;
+
+    private async Task SearchDividends()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            dividends = Array.Empty<DividendRecord>();
+            return;
+        }
+
+        isLoading = true;
+        await Task.Delay(500);
+        dividends = await FetchDividendsAsync(searchQuery);
+        isLoading = false;
+    }
+
+    private Task<DividendRecord[]> FetchDividendsAsync(string query)
+    {
+        // Stubbed data; replace with real API integration
+        var sample = new[]
+        {
+            new DividendRecord("MSFT", "Microsoft Corporation", DateTime.Today.AddDays(-30), 0.62m),
+            new DividendRecord("AAPL", "Apple Inc.", DateTime.Today.AddDays(-45), 0.23m),
+            new DividendRecord("KO",   "The Coca-Cola Company", DateTime.Today.AddDays(-20), 0.44m),
+            new DividendRecord("PEP",  "PepsiCo, Inc.", DateTime.Today.AddDays(-40), 1.02m),
+        };
+
+        var results = sample
+            .Where(d => d.Symbol.Contains(query, StringComparison.OrdinalIgnoreCase)
+                     || d.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        return Task.FromResult(results);
+    }
+
+    private record DividendRecord(string Symbol, string Name, DateTime LastDividend, decimal Yield);
+}
