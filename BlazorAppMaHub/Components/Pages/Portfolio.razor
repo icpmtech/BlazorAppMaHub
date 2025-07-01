@@ -6,13 +6,24 @@
 <h1>Portfolio Stocks</h1>
 
 <p>Search for stock symbols or company names:</p>
-<div class="input-group mb-3">
+<<div class="input-group mb-3">
     <input class="form-control"
            placeholder="e.g. MSFT or Apple"
            @bind="searchQuery"
-           @onkeypress="@(e => { if (e.Key == "Enter") _ = SearchSymbols(); })" />
-    <button class="btn btn-primary" @onclick="SearchSymbols">Search</button>
+           @bind:event="oninput" 
+           @onkeydown="@(e => {
+           if (e.Key == "Enter")
+             _ = SearchSymbols();
+         })" />
+
+    <!-- force this to be a plain button-click -->
+    <button type="button"
+            class="btn btn-primary"
+            @onclick="SearchSymbols">
+        Search
+    </button>
 </div>
+
 
 @if (isLoading)
 {
